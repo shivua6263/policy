@@ -2,7 +2,7 @@
 
 ## 📋 Project Overview
 
-A complete login and signup system has been implemented for Policy Bazar with support for both **Customer** and **Agent** user roles. The system includes backend APIs, AngularJS frontend, Bootstrap styling, and comprehensive documentation.
+A complete login and signup system has been implemented for Policy Bridge with support for both **Customer** and **Agent** user roles. The system includes backend APIs, AngularJS frontend, Bootstrap styling, and comprehensive documentation.
 
 ---
 

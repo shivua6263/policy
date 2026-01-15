@@ -1,4 +1,4 @@
-// Policy Bazar - Custom JavaScript
+// Policy Bridge - Custom JavaScript
 
 // Authentication Check - Run first before anything else
 function checkAuthAndInitialize() {
@@ -386,35 +386,46 @@ function initSmoothScroll() {
 function initPageSpecific() {
     // Check which page we're on
     const path = window.location.pathname;
-    const pageName = path.split('/').pop() || 'index.html';
+    const fileName = path.split('/').pop() || 'index.html';
+    
+    console.log('📄 Page detection:', { path, fileName });
+    
+    // Handle case where pathname doesn't include .html extension
+    const isAccountPage = fileName === 'account.html' || fileName === 'account' || path.includes('account');
+    const isPoliciesPage = fileName === 'policies.html' || fileName === 'policies' || path.includes('policies');
+    const isAgentsPage = fileName === 'agents.html' || fileName === 'agents' || path.includes('agents');
+    const isClaimsPage = fileName === 'claims.html' || fileName === 'claims' || path.includes('claims');
+    const isSupportPage = fileName === 'support.html' || fileName === 'support' || path.includes('support');
+    const isQuotePage = fileName === 'quote.html' || fileName === 'quote' || path.includes('quote');
     
     // Initialize policies page
-    if (pageName === 'policies.html') {
+    if (isPoliciesPage) {
         initPoliciesPage();
     }
     
     // Initialize agents page
-    if (pageName === 'agents.html') {
+    if (isAgentsPage) {
         initAgentsPage();
     }
     
     // Initialize claims page
-    if (pageName === 'claims.html') {
+    if (isClaimsPage) {
         initClaimsPage();
     }
     
     // Initialize support page
-    if (pageName === 'support.html') {
+    if (isSupportPage) {
         initSupportPage();
     }
     
     // Initialize quote page
-    if (pageName === 'quote.html') {
+    if (isQuotePage) {
         initQuotePage();
     }
     
     // Initialize account page
-    if (pageName === 'account.html') {
+    if (isAccountPage) {
+        console.log('✓ Account page detected, initializing...');
         initAccountPage();
     }
 }
@@ -830,6 +841,14 @@ function updateCoverageOptions(policyType) {
 
 // Account Page Functions
 function initAccountPage() {
+    console.log('🏠 initAccountPage() called');
+    
+    // Load user profile information
+    loadUserProfile();
+    
+    // Setup profile image upload
+    setupProfileImageUpload();
+    
     // Tab switching
     const navTabs = document.querySelectorAll('.dashboard-sidebar .nav-link');
     const tabContents = document.querySelectorAll('.tab-content');
@@ -1075,7 +1094,7 @@ policyTypeLinks.forEach(link => {
 });
 
 // Console welcome message
-console.log('%cWelcome to Policy Bazar!', 'color: #0066cc; font-size: 24px; font-weight: bold;');
+console.log('%cWelcome to Policy Bridge!', 'color: #0066cc; font-size: 24px; font-weight: bold;');
 console.log('%cInsurance Made Simple', 'color: #666; font-size: 14px;');
 console.log('%cServices loaded successfully!', 'color: #28a745; font-size: 12px;');
 
@@ -1142,4 +1161,252 @@ function createScrollToTopButton() {
 
 // Initialize scroll to top button
 createScrollToTopButton();
+
+// Profile Image Management Functions
+/**
+ * Load user profile information from localStorage and fetch profile image from backend
+ */
+function loadUserProfile() {
+    const currentUser = localStorage.getItem('currentUser');
+    if (!currentUser) return;
+    
+    const user = JSON.parse(currentUser);
+    const backendUrl = 'http://localhost:8000'; // Update with your backend URL
+    
+    // Update profile name and email
+    const profileNameEl = document.getElementById('profileName');
+    const profileEmailEl = document.getElementById('profileEmail');
+    
+    if (profileNameEl) profileNameEl.textContent = user.name || 'John Doe';
+    if (profileEmailEl) profileEmailEl.textContent = user.email || 'john.doe@email.com';
+    
+    // Fetch and display profile image from backend
+    if (user.id) {
+        fetchProfileImage(user.id, backendUrl);
+    }
+}
+
+/**
+ * Fetch profile image from backend
+ */
+function fetchProfileImage(userId, backendUrl) {
+    const apiUrl = `${backendUrl}/api/customer/${userId}/profile-image/`;
+    const profileImg = document.getElementById('profileImage');
+    
+    fetch(apiUrl, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`API error: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.profile_image && data.profile_image !== null) {
+            // Image exists in database, load it
+            const imageUrl = `${backendUrl}/media/profile_images/${data.profile_image}`;
+            if (profileImg) {
+                profileImg.src = imageUrl;
+                profileImg.style.opacity = '1';
+            }
+            console.log('✓ Profile image loaded from database');
+        } else {
+            // No image in database, use default skeleton avatar
+            if (profileImg) {
+                setDefaultProfileImage(profileImg);
+            }
+            console.log('✓ No custom image, displaying default avatar');
+        }
+    })
+    .catch(error => {
+        console.error('Error fetching profile image:', error);
+        // Show default avatar on error
+        if (profileImg) {
+            setDefaultProfileImage(profileImg);
+        }
+    });
+}
+
+/**
+ * Set default skeleton/avatar profile image
+ */
+function setDefaultProfileImage(profileImg) {
+    // Use a placeholder SVG as default avatar
+    profileImg.src = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Crect width=%22100%22 height=%22100%22 fill=%22%23e0e0e0%22/%3E%3Ccircle cx=%2250%22 cy=%2235%22 r=%2220%22 fill=%22%23999%22/%3E%3Cellipse cx=%2250%22 cy=%2275%22 rx=%2230%22 ry=%2225%22 fill=%22%23999%22/%3E%3C/svg%3E';
+    profileImg.alt = 'Default Profile Picture';
+    profileImg.style.opacity = '0.7';
+}
+
+/**
+ * Setup profile image upload functionality
+ */
+function setupProfileImageUpload() {
+    console.log('🔧 setupProfileImageUpload() called');
+    
+    const editProfileBtn = document.getElementById('editProfileBtn');
+    const profileImageInput = document.getElementById('profileImageInput');
+    
+    console.log('📍 editProfileBtn found:', !!editProfileBtn);
+    console.log('📍 profileImageInput found:', !!profileImageInput);
+    
+    if (!editProfileBtn) {
+        console.error('❌ Edit profile button (id="editProfileBtn") not found!');
+        return;
+    }
+    if (!profileImageInput) {
+        console.error('❌ Profile image input (id="profileImageInput") not found!');
+        return;
+    }
+    
+    console.log('✓ Both button and input found, adding event listeners...');
+    
+    // Trigger file input when edit button is clicked
+    editProfileBtn.addEventListener('click', function(e) {
+        console.log('🖱️ Upload Photo button clicked!');
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('📂 Triggering file input...');
+        profileImageInput.click();
+    });
+    
+    console.log('✓ Click event listener added to button');
+    
+    // Handle file selection
+    profileImageInput.addEventListener('change', function(e) {
+        console.log('📁 File selected');
+        const file = e.target.files[0];
+        
+        if (!file) {
+            console.log('No file selected');
+            return;
+        }
+        
+        console.log('📊 File info:', {
+            name: file.name,
+            type: file.type,
+            size: file.size,
+            sizeInMB: (file.size / (1024 * 1024)).toFixed(2)
+        });
+        
+        // Validate file type
+        const allowedTypes = ['image/png', 'image/jpeg'];
+        if (!allowedTypes.includes(file.type)) {
+            console.error('❌ Invalid file type:', file.type);
+            alert('Only PNG and JPG/JPEG images are allowed');
+            return;
+        }
+        
+        // Validate file size (max 5MB)
+        const maxSize = 5 * 1024 * 1024;
+        if (file.size > maxSize) {
+            console.error('❌ File too large:', file.size);
+            alert('Image size must be less than 5MB');
+            return;
+        }
+        
+        console.log('✓ File validation passed, converting to base64...');
+        
+        // Convert image to base64 and upload
+        const reader = new FileReader();
+        
+        reader.onload = function(event) {
+            const base64Data = event.target.result;
+            console.log('✓ Base64 conversion complete, size:', base64Data.length);
+            uploadProfileImage(base64Data, file.type);
+        };
+        
+        reader.onerror = function() {
+            console.error('❌ Error reading file');
+            alert('Error reading file');
+        };
+        
+        console.log('📖 Starting FileReader...');
+        reader.readAsDataURL(file);
+    });
+    
+    console.log('✓ setupProfileImageUpload() complete');
+}
+
+/**
+ * Upload profile image to backend
+ */
+function uploadProfileImage(base64Data, fileType) {
+    const currentUser = localStorage.getItem('currentUser');
+    if (!currentUser) {
+        alert('Please login first');
+        return;
+    }
+    
+    const user = JSON.parse(currentUser);
+    const backendUrl = 'http://localhost:8000'; // Update with your backend URL
+    const apiUrl = `${backendUrl}/api/customer/${user.id}/profile-image/`;
+    
+    // Determine file extension
+    let fileExtension = 'png';
+    if (fileType === 'image/jpeg') {
+        fileExtension = 'jpg';
+    }
+    
+    const uploadBtn = document.getElementById('editProfileBtn');
+    if (uploadBtn) {
+        uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        uploadBtn.disabled = true;
+    }
+    
+    fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            image: base64Data,
+            fileType: fileExtension
+        })
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.error) {
+            alert(`Upload error: ${data.error}`);
+            return;
+        }
+        
+        alert('✓ Profile image updated successfully!');
+        
+        // Update profile image in UI
+        const imageUrl = `${backendUrl}${data.image_url}`;
+        const profileImg = document.getElementById('profileImage');
+        if (profileImg) {
+            profileImg.src = imageUrl;
+            profileImg.style.opacity = '1';
+        }
+        
+        // Reset file input
+        const profileImageInput = document.getElementById('profileImageInput');
+        if (profileImageInput) {
+            profileImageInput.value = '';
+        }
+        
+        console.log('✓ Image uploaded successfully:', data);
+    })
+    .catch(error => {
+        console.error('Error uploading image:', error);
+        alert(`Error uploading image: ${error.message}`);
+    })
+    .finally(() => {
+        if (uploadBtn) {
+            uploadBtn.innerHTML = '<i class="fas fa-camera"></i>';
+            uploadBtn.disabled = false;
+        }
+    });
+}
+
 

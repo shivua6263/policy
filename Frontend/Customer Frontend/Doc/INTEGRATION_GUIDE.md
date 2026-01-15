@@ -139,7 +139,7 @@ Here's a complete example of an updated navbar:
         <!-- Logo -->
         <a class="navbar-brand" href="index.html">
             <i class="fas fa-shield-alt"></i>
-            <span class="brand-text ms-2">Policy Bazar</span>
+            <span class="brand-text ms-2">Policy Bridge</span>
         </a>
 
         <!-- Navbar Toggle -->

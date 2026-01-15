@@ -1,4 +1,4 @@
-# Policy Bazar - Enhancement Plan
+# Policy Bridge - Enhancement Plan
 
 ## Information Gathered
 - **Current State**: 

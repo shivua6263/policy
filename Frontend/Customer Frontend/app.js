@@ -1,4 +1,4 @@
-// AngularJS Application for Policy Bazar Login
+// AngularJS Application for Policy Bridge Login
 
 var app = angular.module('loginApp', []);
 

@@ -1,7 +1,7 @@
 # Login & Authentication System Documentation
 
 ## Overview
-This document provides a comprehensive guide for the new unified login and signup system for Policy Bazar, supporting both Customer and Agent user types.
+This document provides a comprehensive guide for the new unified login and signup system for Policy Bridge, supporting both Customer and Agent user types.
 
 ## Features Implemented
 

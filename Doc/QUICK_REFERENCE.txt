@@ -1,0 +1,100 @@
+# Quick Test - Profile Image Upload
+
+## Browser Testing
+
+```
+1. Open: http://localhost:3000/account.html
+2. Press: F12 (DevTools)
+3. Go to: Console tab
+4. Refresh: F5
+5. Look for: 🔧 setupProfileImageUpload() called
+```
+
+**If you DON'T see initialization logs** → Problem is here  
+**If you DO see them** → Continue to next step
+
+```
+6. Click: "Upload Photo" button
+7. Look for: 🖱️ Upload Photo button clicked!
+```
+
+**If you DON'T see button click logs** → Button not working  
+**If you DO see them** → Continue to next step
+
+```
+8. Select: Any PNG or JPG file
+9. Look for: 📁 File selected and 📊 File info
+```
+
+---
+
+## Thunder Client Testing
+
+### 1. Test GET (Check Current Image)
+
+```
+GET http://localhost:8000/api/customer/1/profile-image/
+Headers: Content-Type: application/json
+```
+
+Should return: `{ "profile_image": null }` or `{ "profile_image": "John_Doe_1.png" }`
+
+---
+
+### 2. Test POST (Upload Image)
+
+```
+POST http://localhost:8000/api/customer/1/profile-image/
+Headers: Content-Type: application/json
+
+Body:
+{
+  "image": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+  "fileType": "png"
+}
+```
+
+Should return: `{ "message": "Profile image uploaded successfully", ... }` with Status 200
+
+---
+
+## Issues & Solutions
+
+| Issue | Check |
+|-------|-------|
+| No console logs | Is DevTools open? Is it Console tab? Refresh page? |
+| Button doesn't respond | Are you on account.html page? Try hard refresh (Ctrl+Shift+R) |
+| File dialog doesn't open | Check console for errors, screenshot and share |
+| POST request fails | Check if Django is running on port 8000 |
+
+---
+
+## Report Template
+
+Copy-paste this and fill in:
+
+```
+BROWSER CONSOLE:
+✓ Init logs show?
+✓ Button click logs show?
+✓ File select logs show?
+
+THUNDER CLIENT:
+✓ GET request works?
+✓ POST request works?
+
+ERRORS:
+(Paste any error messages from console)
+```
+
+---
+
+## Status
+
+**Changes Made:**
+- ✅ Button changed from camera icon to "Upload Photo"
+- ✅ Added detailed console logging throughout
+- ✅ API endpoints verified working
+- ✅ Ready for debugging
+
+**Next:** Follow the testing steps above and share results!

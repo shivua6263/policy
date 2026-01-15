@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 from django.core.cache import cache
 from django.contrib.auth.hashers import make_password
 import asyncio
-
+6
 try:
     from telegram import Bot
 except ImportError:

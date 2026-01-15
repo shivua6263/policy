@@ -2,6 +2,9 @@ from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+import base64
+import os
+from django.conf import settings
 
 from .models import Customer
 from .serializers import CustomerSerializer, CustomerSignupSerializer, CustomerLoginSerializer
@@ -84,9 +87,10 @@ class CustomerLoginAPI(APIView):
             if customer.check_password(password):
                 return Response({
                     "id": customer.id,
-                    "name": customer.name,
+                    "name": customer.name, 
                     "email": customer.email,
                     "phone_number": customer.phone_number,
+                    "profile_image": customer.profile_image,
                     "message": "Login successful"
                 }, status=status.HTTP_200_OK)
             else:
@@ -96,3 +100,70 @@ class CustomerLoginAPI(APIView):
                 )
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class CustomerProfileImageAPI(APIView):
+    """API endpoint for uploading and managing customer profile images"""
+    
+    def post(self, request, id):
+        """Upload profile image as base64"""
+        try:
+            customer = Customer.objects.get(id=id)
+        except Customer.DoesNotExist:
+            return Response({"error": "Customer not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+        try:
+            # Get base64 image and file type from request
+            image_data = request.data.get('image')
+            file_type = request.data.get('fileType', 'png')
+            
+            if not image_data:
+                return Response({"error": "No image data provided"}, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Validate file type
+            if file_type not in ['png', 'jpg', 'jpeg']:
+                return Response({"error": "Only PNG and JPG/JPEG formats are allowed"}, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Create media directory if it doesn't exist
+            media_dir = os.path.join(settings.BASE_DIR, 'media', 'profile_images')
+            os.makedirs(media_dir, exist_ok=True)
+            
+            # Generate filename with username and id
+            filename = f"{customer.name.replace(' ', '_')}_{customer.id}.{file_type}"
+            file_path = os.path.join(media_dir, filename)
+            
+            # Remove base64 header if present (data:image/png;base64,)
+            if ',' in image_data:
+                image_data = image_data.split(',')[1]
+            
+            # Decode base64 and save image
+            image_binary = base64.b64decode(image_data)
+            with open(file_path, 'wb') as f:
+                f.write(image_binary)
+            
+            # Update customer profile image field
+            customer.profile_image = filename
+            customer.save()
+            
+            return Response({
+                "message": "Profile image uploaded successfully",
+                "profile_image": filename,
+                "image_url": f"/media/profile_images/{filename}"
+            }, status=status.HTTP_200_OK)
+        
+        except Exception as e:
+            return Response({"error": f"Error uploading image: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    def get(self, request, id):
+        """Get customer profile image"""
+        try:
+            customer = Customer.objects.get(id=id)
+            if customer.profile_image:
+                return Response({
+                    "profile_image": customer.profile_image,
+                    "image_url": f"/media/profile_images/{customer.profile_image}"
+                }, status=status.HTTP_200_OK)
+            else:
+                return Response({"profile_image": None}, status=status.HTTP_200_OK)
+        except Customer.DoesNotExist:
+            return Response({"error": "Customer not found"}, status=status.HTTP_404_NOT_FOUND)
